@@ -66,3 +66,17 @@ func (pg *postgres) GetCustomer(ctx context.Context, customerId string) (models.
 
 	return pgx.CollectOneRow(rows, pgx.RowToStructByName[models.Customer])
 }
+
+func (pg *postgres) DeleteCustomer(ctx context.Context, customerId string) error {
+	query := `DELETE FROM customers WHERE id = $1`
+
+	rows, err := pg.db.Query(ctx, query, customerId)
+
+	fmt.Println(rows)
+
+	if err != nil {
+		return fmt.Errorf("unable to delete user: %w", err)
+	}
+
+	return nil
+}
