@@ -1,11 +1,18 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"net/http"
+	"os"
 	"regexp"
+
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/shaneajeffery/udacity-go-crm-backend/db"
 )
 
 func main() {
+	db.DbConn(context.Background(), os.Getenv("POSTGRES_DB_URL"))
 
 	mux := http.NewServeMux()
 
@@ -15,11 +22,14 @@ func main() {
 	http.ListenAndServe(":8080", mux)
 }
 
-type CustomersHandler struct{}
+type CustomersHandler struct {
+	pgInstance *pgxpool.Pool
+}
 
 func (c *CustomersHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var (
-		CustomerRegex       = regexp.MustCompile(`^/customers/*$`)
+		CustomerRegex = regexp.MustCompile(`^/customers/*$`)
+		// Looking for UUID for the Customer ID.
 		CustomerRegexWithID = regexp.MustCompile(`^/customers/([a-z0-9]+(?:-[a-z0-9]+)+)$`)
 	)
 
@@ -45,11 +55,18 @@ func (c *CustomersHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *CustomersHandler) getCustomers(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Get customers route"))
+	customers, _ := db.GetDbConn(context.Background()).GetCustomers(context.Background())
+
+	fmt.Print("hello")
+
+	for _, customer := range customers {
+		fmt.Printf("%#v\n", customer)
+	}
 }
 
 func (c *CustomersHandler) getCustomer(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Get customer route"))
+
 }
 
 func (c *CustomersHandler) createCustomer(w http.ResponseWriter, r *http.Request) {
