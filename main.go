@@ -3,15 +3,22 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"regexp"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/joho/godotenv"
 	"github.com/shaneajeffery/udacity-go-crm-backend/db"
 )
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
 	db.DbConn(context.Background(), os.Getenv("POSTGRES_DB_URL"))
 
 	mux := http.NewServeMux()
