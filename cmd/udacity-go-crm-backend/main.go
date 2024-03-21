@@ -13,8 +13,9 @@ import (
 )
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
+	var err error
+
+	if err = godotenv.Load(); err != nil {
 		log.Fatal("Error loading .env file")
 	}
 
@@ -27,5 +28,4 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
 }
