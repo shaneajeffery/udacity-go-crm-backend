@@ -1,12 +1,12 @@
 ## Udacity Go CRM Backend
 
-Course Link: https://www.udacity.com/course/golang--cd11970
+**Course Link:** https://www.udacity.com/course/golang--cd11970
+
+**Project Layout Recommendations:** https://github.com/golang-standards/project-layout
 
 Given the times that I have worked with Go in a professional capacity have been sporadic, I started the Udacity course to make sure I didn't miss out on any of the fundamentals.  I had never built a Go project from scratch and was always stepping into projects that were already mature.
 
 So, with that, I wanted to stick to Go standard library as much as possible for this project.  I know I could have reached for a lot of different packages to make my code more simplistic, but I wanted to be sure I understood the standard library concepts before getting into the abstractions too heavily.
-
-Following https://github.com/golang-standards/project-layout for project layout recommendations.
 
 ### External Packages Used
 
