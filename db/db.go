@@ -31,7 +31,7 @@ func DbConn(ctx context.Context, connString string) {
 
 }
 
-func GetDbConn(ctx context.Context) *postgres {
+func GetDbConn() *postgres {
 	return pgInstance
 }
 
@@ -44,8 +44,6 @@ func (pg *postgres) GetCustomers(ctx context.Context) ([]models.Customer, error)
 
 	rows, err := pg.db.Query(ctx, query)
 
-	fmt.Print(err)
-
 	if err != nil {
 		return nil, fmt.Errorf("unable to query users: %w", err)
 	}
@@ -53,4 +51,18 @@ func (pg *postgres) GetCustomers(ctx context.Context) ([]models.Customer, error)
 	defer rows.Close()
 
 	return pgx.CollectRows(rows, pgx.RowToStructByName[models.Customer])
+}
+
+func (pg *postgres) GetCustomer(ctx context.Context, customerId string) (models.Customer, error) {
+	query := `SELECT * FROM customers WHERE id = $1`
+
+	rows, err := pg.db.Query(ctx, query, customerId)
+
+	if err != nil {
+		return models.Customer{}, fmt.Errorf("unable to query users: %w", err)
+	}
+
+	defer rows.Close()
+
+	return pgx.CollectOneRow(rows, pgx.RowToStructByName[models.Customer])
 }

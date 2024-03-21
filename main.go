@@ -2,16 +2,18 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"encoding/json"
 	"log"
 	"net/http"
 	"os"
 	"regexp"
+	"strings"
 
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 	"github.com/shaneajeffery/udacity-go-crm-backend/db"
 )
+
+var ctx = context.Background()
 
 func main() {
 	err := godotenv.Load()
@@ -29,9 +31,7 @@ func main() {
 	http.ListenAndServe(":8080", mux)
 }
 
-type CustomersHandler struct {
-	pgInstance *pgxpool.Pool
-}
+type CustomersHandler struct{}
 
 func (c *CustomersHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var (
@@ -61,19 +61,24 @@ func (c *CustomersHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (c *CustomersHandler) getCustomers(w http.ResponseWriter, r *http.Request) {
-	customers, _ := db.GetDbConn(context.Background()).GetCustomers(context.Background())
+func (c *CustomersHandler) getCustomers(w http.ResponseWriter, _ *http.Request) {
+	customers, _ := db.GetDbConn().GetCustomers(ctx)
 
-	fmt.Print("hello")
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
 
-	for _, customer := range customers {
-		fmt.Printf("%#v\n", customer)
-	}
+	json.NewEncoder(w).Encode(customers)
 }
 
 func (c *CustomersHandler) getCustomer(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Get customer route"))
+	id := strings.TrimPrefix(r.URL.Path, "/customers/")
 
+	customer, _ := db.GetDbConn().GetCustomer(ctx, id)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	json.NewEncoder(w).Encode(customer)
 }
 
 func (c *CustomersHandler) createCustomer(w http.ResponseWriter, r *http.Request) {
