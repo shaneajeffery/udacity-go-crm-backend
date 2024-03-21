@@ -8,7 +8,7 @@ So, with that, I wanted to stick to Go standard library as much as possible for 
 
 Following https://github.com/golang-standards/project-layout for project layout recommendations.
 
-### External Modules Used
+### External Packages Used
 
 - air: Needed for live reloading.
 - pgx: Needed for interfacing with postgres.
@@ -27,5 +27,5 @@ Needed `alias air='$(go env GOPATH)/bin/air'` to get `air init` to run properly.
 1. Import the `seed_data.sql` in your local Postgres client.
 2. Create your .env file with `cp .env.example .env` .
 3. Set your `POSTGRES_DB_URL` in the `.env`.
-4. Run `go get .` to download all external modules.
+4. Run `go get .` to download all external packages.
 4. Run `./cmd/udacity-go-crm-backend` from the root of the project.
