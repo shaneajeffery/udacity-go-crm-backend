@@ -21,10 +21,25 @@ var (
 func NewRouter() http.Handler {
 	mux := http.NewServeMux()
 
+	mux.HandleFunc("/", IndexHandler)
 	mux.Handle("/customers", &CustomersHandler{})
 	mux.Handle("/customers/", &CustomersHandler{})
 
 	return mux
+}
+
+func IndexHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "plain/text")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(`
+	This API allows access to a Customers CRM API.  Your available endpoints are:
+
+	GET    /customers       -- Returns all customers.
+	GET    /customers/:id   -- Returns specified customer.
+	POST   /customers       -- Creates new customer.
+	PUT    /customers/:id   -- Updates specified customer.
+	DELETE /customers/      -- Deletes specified customer.
+	`))
 }
 
 type CustomersHandler struct{}
