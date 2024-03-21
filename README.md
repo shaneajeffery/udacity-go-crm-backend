@@ -10,9 +10,9 @@ Following https://github.com/golang-standards/project-layout for project layout 
 
 ### External Packages Used
 
-- air: Needed for live reloading.
-- pgx: Needed for interfacing with postgres.
-- godotenv: Needed for .env file import.
+- `air`: Needed for live reloading.
+- `pgx`: Needed for interfacing with postgres.
+- `godotenv`: Needed for .env file import.
 
 I would definitely reach for a HTTP library to make building out of these REST API pieces easier and more concise.  I would look at Gin or Chi mainly.
 
