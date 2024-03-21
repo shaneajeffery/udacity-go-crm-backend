@@ -28,4 +28,5 @@ Needed `alias air='$(go env GOPATH)/bin/air'` to get `air init` to run properly.
 2. Create your .env file with `cp .env.example .env` .
 3. Set your `POSTGRES_DB_URL` in the `.env`.
 4. Run `go get .` to download all external packages.
-4. Run `./cmd/udacity-go-crm-backend` from the root of the project.
+5. Run `./cmd/udacity-go-crm-backend` from the root of the project.
+6. To build the binary, run `go build -o ./bin ./cmd/udacity-go-crm-backend`.
