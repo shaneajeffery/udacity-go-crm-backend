@@ -122,8 +122,31 @@ func (c *CustomersHandler) createCustomer(w http.ResponseWriter, r *http.Request
 	w.WriteHeader(http.StatusCreated)
 }
 
-func (c *CustomersHandler) updateCustomer(w http.ResponseWriter, _ *http.Request) {
-	w.Write([]byte("Update customer rout"))
+func (c *CustomersHandler) updateCustomer(w http.ResponseWriter, r *http.Request) {
+	matches := CustomerRegexWithID.FindStringSubmatch(r.URL.Path)
+
+	// If the regex fails to get the URL base + the customerId arg, then throw err.
+	if len(matches) < 2 {
+		InternalServerErrorHandler(w, r)
+		return
+	}
+
+	var customer models.Customer
+	if err := json.NewDecoder(r.Body).Decode(&customer); err != nil {
+		fmt.Println(err)
+		InternalServerErrorHandler(w, r)
+		return
+	}
+
+	err := db.GetDbConn().UpdateCustomer(ctx, matches[1], customer)
+
+	if err != nil {
+		fmt.Println(err)
+		InternalServerErrorHandler(w, r)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
 func (c *CustomersHandler) deleteCustomer(w http.ResponseWriter, r *http.Request) {

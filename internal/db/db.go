@@ -98,3 +98,23 @@ func (pg *postgres) CreateCustomer(ctx context.Context, customer models.Customer
 
 	return nil
 }
+
+func (pg *postgres) UpdateCustomer(ctx context.Context, customerId string, customer models.Customer) error {
+	query := `UPDATE customers SET name = @name, role = @role, email = @email, phone = @phone, contacted = @contacted WHERE id = @id`
+
+	args := pgx.NamedArgs{
+		"name":      customer.Name,
+		"role":      customer.Role,
+		"email":     customer.Email,
+		"phone":     customer.Phone,
+		"contacted": customer.Contacted,
+		"id":        customerId,
+	}
+
+	_, err := pg.db.Exec(ctx, query, args)
+	if err != nil {
+		return fmt.Errorf("unable to update row: %w", err)
+	}
+
+	return nil
+}
