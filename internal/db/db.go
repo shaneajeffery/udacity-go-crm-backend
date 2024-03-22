@@ -70,9 +70,7 @@ func (pg *postgres) GetCustomer(ctx context.Context, customerId string) (models.
 func (pg *postgres) DeleteCustomer(ctx context.Context, customerId string) error {
 	query := `DELETE FROM customers WHERE id = $1`
 
-	rows, err := pg.db.Query(ctx, query, customerId)
-
-	fmt.Println(rows)
+	_, err := pg.db.Query(ctx, query, customerId)
 
 	if err != nil {
 		return fmt.Errorf("unable to delete user: %w", err)
@@ -82,15 +80,21 @@ func (pg *postgres) DeleteCustomer(ctx context.Context, customerId string) error
 }
 
 func (pg *postgres) CreateCustomer(ctx context.Context, customer models.Customer) error {
-	// query := `DELETE FROM customers WHERE id = $1`
+	query := `INSERT INTO customers (name, role, email, phone, contacted) 
+				VALUES (@name, @role, @email, @phone, @contacted)`
 
-	// rows, err := pg.db.Query(ctx, query, customerId)
+	args := pgx.NamedArgs{
+		"name":      customer.Name,
+		"role":      customer.Role,
+		"email":     customer.Email,
+		"phone":     customer.Phone,
+		"contacted": customer.Contacted,
+	}
 
-	// fmt.Println(rows)
-
-	// if err != nil {
-	// 	return fmt.Errorf("unable to delete user: %w", err)
-	// }
+	_, err := pg.db.Exec(ctx, query, args)
+	if err != nil {
+		return fmt.Errorf("unable to insert row: %w", err)
+	}
 
 	return nil
 }

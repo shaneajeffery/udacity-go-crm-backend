@@ -23,8 +23,8 @@ func main() {
 
 	mux := routes.NewRouter()
 
-	fmt.Printf("Server listening on http://localhost:8080")
-	http.ListenAndServe(":8080", mux)
+	fmt.Println("Server listening on http://localhost:8082")
+	http.ListenAndServe(":8082", mux)
 	if err != nil {
 		panic(err)
 	}

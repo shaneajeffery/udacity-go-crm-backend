@@ -3,6 +3,7 @@ package routes
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"regexp"
 
@@ -45,7 +46,6 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 type CustomersHandler struct{}
 
 func (c *CustomersHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-
 	switch {
 	case r.Method == http.MethodPost && CustomerRegex.MatchString(r.URL.Path):
 		c.createCustomer(w, r)
@@ -104,28 +104,26 @@ func (c *CustomersHandler) getCustomer(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *CustomersHandler) createCustomer(w http.ResponseWriter, r *http.Request) {
-	// Recipe object that will be populated from JSON payload
 	var customer models.Customer
 	if err := json.NewDecoder(r.Body).Decode(&customer); err != nil {
+		fmt.Println(err)
 		InternalServerErrorHandler(w, r)
 		return
 	}
 
-	// _, err := db.GetDbConn().CreateCustomer(ctx, customer)
+	err := db.GetDbConn().CreateCustomer(ctx, customer)
 
-	// // Convert the name of the recipe into URL friendly string
-	// resourceID := slug.Make(recipe.Name)
-	// // Call the store to add the recipe
-	// if err := h.store.Add(resourceID, recipe); err != nil {
-	// 	InternalServerErrorHandler(w, r)
-	// 	return
-	// }
+	if err != nil {
+		fmt.Println(err)
+		InternalServerErrorHandler(w, r)
+		return
+	}
 
 	w.WriteHeader(http.StatusCreated)
 }
 
 func (c *CustomersHandler) updateCustomer(w http.ResponseWriter, _ *http.Request) {
-	w.Write([]byte("Update customer route"))
+	w.Write([]byte("Update customer rout"))
 }
 
 func (c *CustomersHandler) deleteCustomer(w http.ResponseWriter, r *http.Request) {
@@ -141,6 +139,7 @@ func (c *CustomersHandler) deleteCustomer(w http.ResponseWriter, r *http.Request
 	_, err := db.GetDbConn().GetCustomer(ctx, matches[1])
 
 	if err != nil {
+		fmt.Println(err)
 		NotFoundHandler(w, r)
 		return
 	}
