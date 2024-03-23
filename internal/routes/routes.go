@@ -67,16 +67,16 @@ func (c *CustomersHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (c *CustomersHandler) getCustomers(w http.ResponseWriter, r *http.Request) {
+func (c *CustomersHandler) getCustomers(w http.ResponseWriter, _ *http.Request) {
 	customers, err := db.GetDbConn().GetCustomers(ctx)
-
-	if err != nil {
-		NotFoundHandler(w, r)
-		return
-	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
+
+	if err != nil {
+		json.NewEncoder(w).Encode(nil)
+		return
+	}
 
 	json.NewEncoder(w).Encode(customers)
 }
@@ -92,13 +92,13 @@ func (c *CustomersHandler) getCustomer(w http.ResponseWriter, r *http.Request) {
 
 	customer, err := db.GetDbConn().GetCustomer(ctx, matches[1])
 
-	if err != nil {
-		NotFoundHandler(w, r)
-		return
-	}
-
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
+
+	if err != nil {
+		json.NewEncoder(w).Encode(nil)
+		return
+	}
 
 	json.NewEncoder(w).Encode(customer)
 }
