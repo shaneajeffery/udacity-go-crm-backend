@@ -1,23 +1,47 @@
 package routes
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"regexp"
 
-	"github.com/shaneajeffery/udacity-go-crm-backend/internal/db"
+	"github.com/google/uuid"
 	"github.com/shaneajeffery/udacity-go-crm-backend/internal/models"
 )
-
-var ctx = context.Background()
 
 var (
 	CustomerRegex = regexp.MustCompile(`^/customers/*$`)
 	// Looking for UUID for the Customer ID.
 	CustomerRegexWithID = regexp.MustCompile(`^/customers/([a-z0-9]+(?:-[a-z0-9]+)+)$`)
 )
+
+var customerList = []models.Customer{
+	{
+		ID:        "741f965c-42d6-43b0-9389-648295925c0f",
+		Name:      "Customer 1",
+		Role:      "Admin",
+		Email:     "customer1@customer.com",
+		Phone:     "555-555-5555",
+		Contacted: true,
+	},
+	{
+		ID:        "4ab256fc-6367-444e-a205-e2bb2832874e",
+		Name:      "Customer 2",
+		Role:      "Customer",
+		Email:     "customer2@customer.com",
+		Phone:     "555-555-5556",
+		Contacted: false,
+	},
+	{
+		ID:        "4dac8255-0ae0-4216-abbb-15a85df4af36",
+		Name:      "Customer 3",
+		Role:      "Customer",
+		Email:     "customer3@customer.com",
+		Phone:     "555-555-5557",
+		Contacted: false,
+	},
+}
 
 func NewRouter() http.Handler {
 	mux := http.NewServeMux()
@@ -68,17 +92,10 @@ func (c *CustomersHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *CustomersHandler) getCustomers(w http.ResponseWriter, _ *http.Request) {
-	customers, err := db.GetDbConn().GetCustomers(ctx)
-
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
-	if err != nil {
-		json.NewEncoder(w).Encode(nil)
-		return
-	}
-
-	json.NewEncoder(w).Encode(customers)
+	json.NewEncoder(w).Encode(customerList)
 }
 
 func (c *CustomersHandler) getCustomer(w http.ResponseWriter, r *http.Request) {
@@ -90,34 +107,31 @@ func (c *CustomersHandler) getCustomer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	customer, err := db.GetDbConn().GetCustomer(ctx, matches[1])
+	foundCustomerIndex := IndexOf(matches[1], customerList)
+
+	if foundCustomerIndex == -1 {
+		NotFoundHandler(w, r)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
-	if err != nil {
-		json.NewEncoder(w).Encode(nil)
-		return
-	}
-
-	json.NewEncoder(w).Encode(customer)
+	json.NewEncoder(w).Encode(customerList[foundCustomerIndex])
 }
 
 func (c *CustomersHandler) createCustomer(w http.ResponseWriter, r *http.Request) {
-	var customer models.Customer
-	if err := json.NewDecoder(r.Body).Decode(&customer); err != nil {
+	var newCustomer models.Customer
+	if err := json.NewDecoder(r.Body).Decode(&newCustomer); err != nil {
 		fmt.Println(err)
 		InternalServerErrorHandler(w, r)
 		return
 	}
 
-	err := db.GetDbConn().CreateCustomer(ctx, customer)
+	// Generate unique ID for customer.
+	newCustomer.ID = uuid.New().String()
 
-	if err != nil {
-		fmt.Println(err)
-		InternalServerErrorHandler(w, r)
-		return
-	}
+	customerList = append(customerList, newCustomer)
 
 	w.WriteHeader(http.StatusCreated)
 }
@@ -131,20 +145,25 @@ func (c *CustomersHandler) updateCustomer(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	var customer models.Customer
-	if err := json.NewDecoder(r.Body).Decode(&customer); err != nil {
+	var updatedCustomer models.Customer
+	if err := json.NewDecoder(r.Body).Decode(&updatedCustomer); err != nil {
 		fmt.Println(err)
 		InternalServerErrorHandler(w, r)
 		return
 	}
 
-	err := db.GetDbConn().UpdateCustomer(ctx, matches[1], customer)
+	foundCustomerIndex := IndexOf(matches[1], customerList)
 
-	if err != nil {
-		fmt.Println(err)
-		InternalServerErrorHandler(w, r)
+	if foundCustomerIndex == -1 {
+		NotFoundHandler(w, r)
 		return
 	}
+
+	customerList[foundCustomerIndex].Name = updatedCustomer.Name
+	customerList[foundCustomerIndex].Role = updatedCustomer.Role
+	customerList[foundCustomerIndex].Email = updatedCustomer.Email
+	customerList[foundCustomerIndex].Phone = updatedCustomer.Phone
+	customerList[foundCustomerIndex].Contacted = updatedCustomer.Contacted
 
 	w.WriteHeader(http.StatusOK)
 }
@@ -158,19 +177,15 @@ func (c *CustomersHandler) deleteCustomer(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// Check to see if the user exists before we try to delete it.
-	_, err := db.GetDbConn().GetCustomer(ctx, matches[1])
+	foundCustomerIndex := IndexOf(matches[1], customerList)
 
-	if err != nil {
-		fmt.Println(err)
+	if foundCustomerIndex == -1 {
 		NotFoundHandler(w, r)
 		return
 	}
 
-	if err := db.GetDbConn().DeleteCustomer(ctx, matches[1]); err != nil {
-		InternalServerErrorHandler(w, r)
-		return
-	}
+	// Re-slicing the slice to remove the foundCustomerIndex so that the item is actually deleted.
+	customerList = append(customerList[:foundCustomerIndex], customerList[foundCustomerIndex+1:]...)
 
 	w.WriteHeader(http.StatusOK)
 }
@@ -183,4 +198,18 @@ func InternalServerErrorHandler(w http.ResponseWriter, r *http.Request) {
 func NotFoundHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotFound)
 	w.Write([]byte("404 Not Found"))
+}
+
+// This function will check to see if the Customer ID exists
+// in the passed Customer List.
+// If it does exist, then the slice index will be returned.
+// If not, then -1 will be returned.
+func IndexOf(element string, data []models.Customer) int {
+	for k, v := range data {
+		if element == v.ID {
+			return k
+		}
+	}
+
+	return -1
 }
